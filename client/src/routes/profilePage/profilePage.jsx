@@ -109,6 +109,7 @@ function ProfilePage() {
         <div className="wrapper">
           <Suspense fallback={<p>Loading...</p>}>
             <Await
+            //chatResponse is fromn the loaders.js
               resolve={data.chatResponse}
               errorElement={<p>Error loading chats!</p>}
             >

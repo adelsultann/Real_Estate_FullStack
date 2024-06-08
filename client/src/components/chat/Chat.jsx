@@ -8,20 +8,27 @@ import { useNotificationStore } from "../../lib/notificationStore";
 
 function Chat({ chats }) {
      const [chat, setChat] = useState(null);
+     console.log(chat)
      const { currentUser } = useContext(AuthContext);
+     //Provides WebSocket connection.
      const { socket } = useContext(SocketContext);
+
+     //Creates a reference to the message end for auto-scrolling.
 
      const messageEndRef = useRef();
 
      const decrease = useNotificationStore((state) => state.decrease);
 
+     //Scrolls to the latest message whenever the chat state changes
      useEffect(() => {
           messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
      }, [chat]);
 
+     // read chat 
      const handleOpenChat = async (id, receiver) => {
           try {
                const res = await apiRequest("/chats/" + id);
+               //Checks if the chat has been seen by the current user and decreases notifications if not
                if (!res.data.seenBy.includes(currentUser.id)) {
                     decrease();
                }
@@ -42,7 +49,7 @@ function Chat({ chats }) {
                const res = await apiRequest.post("/messages/" + chat.id, { text });
                setChat((prev) => ({ ...prev, messages: [...prev.messages, res.data] }));
                e.target.reset();
-               
+
                socket.emit("sendMessage", {
                     receiverId: chat.receiver.id,
                     data: res.data,
@@ -52,6 +59,7 @@ function Chat({ chats }) {
           }
      };
 
+     //Handle Incoming Messages
      useEffect(() => {
           const read = async () => {
                try {
@@ -96,13 +104,17 @@ function Chat({ chats }) {
                          </div>
                     ))}
                </div>
+
                {chat && (
+                    //if the chat state is not null then we will open the chatbox
+
                     <div className="chatBox">
                          <div className="top">
                               <div className="user">
                                    <img src={chat.receiver.avatar || "noavatar.jpg"} alt="" />
                                    {chat.receiver.username}
                               </div>
+                              
                               <span className="close" onClick={() => setChat(null)}>
                                    X
                               </span>
@@ -111,6 +123,9 @@ function Chat({ chats }) {
                               {chat.messages.map((message) => (
                                    <div
                                         className="chatMessage"
+                                        //this style to align the message
+                                        // one user will have their messages 
+                                        //on the right and the other on the left
                                         style={{
                                              alignSelf:
                                                   message.userId === currentUser.id

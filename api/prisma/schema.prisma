@@ -88,10 +88,13 @@ model User {
 model Chat {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   users     User[]    @relation(fields: [userIDs], references: [id])
+  // Array of user IDs for the participants. Helps establish relationships without having to fetch full user objects.
   userIDs   String[]  @db.ObjectId
   createdAt DateTime  @default(now())
+  //Array of user IDs who have seen the messages. 
   seenBy    String[]  @db.ObjectId
   messages  Message[]
+  //Optional field to store the last message text for quick access
   lastMessage String?
 }
 

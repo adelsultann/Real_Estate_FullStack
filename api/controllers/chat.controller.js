@@ -1,30 +1,41 @@
 import prisma from "../lib/prisma.js";
 
+// Fetches all chats involving the authenticated user.
+// Enriches each chat with information about the other participant (receiver).
+// Returns the enriched chat objects as a JSON response.
+
 export const getChats = async (req, res) => {
   const tokenUserId = req.userId;
 
   try {
+    //fetches all chats where the current user is one of the participants (userIDs contains tokenUserId)
     const chats = await prisma.chat.findMany({
       where: {
         userIDs: {
+          // hasSome is a methd in prisma
           hasSome: [tokenUserId],
         },
       },
     });
+//This finds the ID of the other participant in the chat (the receiver), excluding the current user's ID. || we did this to
+// extract more information from the backend to disply it on the frontend
 
     for (const chat of chats) {
       const receiverId = chat.userIDs.find((id) => id !== tokenUserId);
-
+        // we retrive the user info from the user database
       const receiver = await prisma.user.findUnique({
         where: {
           id: receiverId,
         },
+        // this is to just select what we want to retrive 
         select: {
           id: true,
           username: true,
           avatar: true,
         },
       });
+        //Adds the receiver's information to the chat object.
+
       chat.receiver = receiver;
     }
 
@@ -35,6 +46,7 @@ export const getChats = async (req, res) => {
   }
 };
 
+//retrieves a chat from the database, ensuring that only users involved in the chat can access it. It also updates the chat to mark it as seen by the current user
 export const getChat = async (req, res) => {
   const tokenUserId = req.userId;
 
@@ -43,9 +55,12 @@ export const getChat = async (req, res) => {
       where: {
         id: req.params.id,
         userIDs: {
+          //so that only user who involved to the chat can see it 
           hasSome: [tokenUserId],
         },
       },
+      // to include all the messages in that chat 
+      //remember the relation on chat can have many messages
       include: {
         messages: {
           orderBy: {
@@ -61,6 +76,7 @@ export const getChat = async (req, res) => {
       },
       data: {
         seenBy: {
+          //push operator appends the user ID to the array
           push: [tokenUserId],
         },
       },

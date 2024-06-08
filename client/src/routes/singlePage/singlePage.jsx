@@ -9,10 +9,25 @@ import apiRequest from "../../lib/apiRequest";
 
 function SinglePage() {
   const post = useLoaderData();
+  console.log(post.userId)
   console.log(post)
   const [saved, setSaved] = useState(post.isSaved);
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+
+  const sendChat = async (receiverId) => {
+    setIsLoading(true)
+    try {
+      const res = await apiRequest.post("/chats", { receiverId });
+      alert("message has been sent")
+     
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
 
   // this is to add post to the saved list 
@@ -146,7 +161,7 @@ function SinglePage() {
             <Map items={[post]} />
           </div>
           <div className="buttons">
-            <button>
+            <button onClick={() => sendChat(post.userId)} disabled={isLoading} >
               <img src="/chat.png" alt="" />
               Send a Message
             </button>
